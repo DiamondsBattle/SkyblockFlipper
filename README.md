@@ -18,3 +18,14 @@ No market data is stored, as the flipper finds gaps in a item's price, enabling 
 - Flip precision: **>90%**
 
 \* depending on Internet connection speed and flip settings 
+
+### Installation
+- Prerequisites:
+  - Python 3.8+
+  - Git
+  - (*optional*) Discord Webhook URL and IDs of users to mention
+1. Clone the repository : `git clone https://github.com/DiamondsBattle/SkyblockFlipper.git ; cd SkyblockFlipper`
+2. Install the required packages : `python -m pip install -r requirements.txt` (using a venv is recommended)
+3. (*optional*) Create `user_settings.json` from `default_settings.json`, adding custom settings and wehhook settings
+4. Create a `logs` folder in the root directory
+5. Run the flipper : `python main.py`
