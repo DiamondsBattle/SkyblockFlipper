@@ -1,0 +1,17 @@
+{
+  "base_url": "https://api.hypixel.net/skyblock/auctions",
+  "categories": [
+    "accessories",
+    "armor",
+    "blocks",
+    "consumables",
+    "misc",
+    "weapon"
+  ],
+  "exceptions": [],
+  "min_flip": 0,
+  "min_price": 1e5,
+  "min_supply": 40,
+  "webhook_url": "",
+  "webhook_mentions": []
+}
