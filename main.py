@@ -38,8 +38,7 @@ class HereWeGoAgain:
         self.categories = settings['categories']
         self.exceptions = settings['exceptions']
         self.base_url = settings['base_url']
-        # self.webhook_url = settings['webhook_url']
-        self.webhook_url = 'aa'
+        self.webhook_url = settings['webhook_url']
         self.webhook_mentions = settings['webhook_mentions']
         self.wh_configured = True
         if not self.webhook_url:
