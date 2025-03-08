@@ -1,7 +1,4 @@
-import logging as log
-import sys
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 from json import load
 from operator import itemgetter
 from threading import Thread
@@ -25,11 +22,11 @@ class HereWeGoAgain:
         """
         try:
             with open('user_settings.json', 'r') as f:
-                log.debug('Loading user settings from user_settings.json')
+                # print('Loading user settings from user_settings.json')
                 settings = load(f)
         except FileNotFoundError:
             with open('default_settings.json', 'r') as f:
-                log.warning('No user_settings.json found, using default settings')
+                # print('No user_settings.json found, using default settings')
                 settings = load(f)
 
         self.min_price = settings['min_price']
@@ -42,7 +39,7 @@ class HereWeGoAgain:
         self.webhook_mentions = settings['webhook_mentions']
         self.wh_configured = True
         if not self.webhook_url:
-            log.critical('Webhook URL not set, ignoring discord pings')
+            # print('Webhook URL not set, ignoring discord pings')
             self.wh_configured = False
 
         self.ah = None
@@ -71,16 +68,16 @@ class HereWeGoAgain:
             sleep_time = 50 - market_delay
             if sleep_time > 0:
                 sleep(sleep_time)
-                log.debug(f'Sleeping for {round(sleep_time)}s')
+                # print(f'Sleeping for {round(sleep_time)}s')
             return
         else:
             self.last_ah_update = self.ah['lastUpdated']
-            log.info(f'Market updated !')
+            # print(f'Market updated !')
 
-        log.debug('Updating flipper')
+        # print('Updating flipper')
 
         self.page_count = self.ah['totalPages']
-        log.debug(f'Page count : {self.page_count}')
+        # print(f'Page count : {self.page_count}')
 
         self.items = {}
 
@@ -91,10 +88,10 @@ class HereWeGoAgain:
         ttime = round(perf_counter() - self.start_time, 2)
         pph = round((self.total_profit / ttime * 3600) / 1e6, 1)
 
-        log.info(f'Total flip value {self.cleanInt(self.total_value)}')
-        log.info(f'Total flip profit {self.cleanInt(self.total_profit)}')
-        log.info(f'Elapsed time : {ttime}s')
-        log.info(f'~{pph}m/h')
+        print(f'Total flip value {self.cleanInt(self.total_value)}')
+        print(f'Total flip profit {self.cleanInt(self.total_profit)}')
+        print(f'Elapsed time : {ttime}s')
+        print(f'~{pph}m/h')
 
     def updateAllPages(self) -> None:
         """
@@ -108,7 +105,9 @@ class HereWeGoAgain:
             for count in range(self.page_count + 1):
                 pool.append(executor.submit(self.addItemsFromPage, page=count))
 
-        log.debug(f'Fetched {self.page_count} pages in {round(perf_counter() - start, 2)}s')
+        self.sortItems()
+
+        print(f'Fetched {self.page_count} pages in {round(perf_counter() - start, 2)}s')
 
     def addItemsFromPage(self, page: int) -> None:
         """
@@ -129,11 +128,10 @@ class HereWeGoAgain:
                     self.items[cleaned_name].append(sold_item)
                 else:
                     self.items[cleaned_name] = [sold_item]
-                self.items[cleaned_name] = sorted(self.items[cleaned_name], key=itemgetter(0))
 
         end = perf_counter()
         end_total_time = end - start_time
-        log.debug(f'Got items from page {page} in {round(end_total_time, 2)}s')
+        # print(f'Got items from page {page} in {round(end_total_time, 2)}s')
 
     def cleanName(self, name: str) -> str:
         """
@@ -181,7 +179,7 @@ class HereWeGoAgain:
             margin = price2 - price1
 
             if margin > (price2 / 10) and margin > self.min_flip:
-                log.info(f'Flip : {name} - {self.cleanInt(price2)} -> {self.cleanInt(price1)}')
+                # print(f'Flip : {name} - {self.cleanInt(price2)} -> {self.cleanInt(price1)}')
                 wincopy(f'/viewauction {uuid1}')
                 Thread(target=self.sendAlert, args=(items,)).start()
 
@@ -195,7 +193,15 @@ class HereWeGoAgain:
         :return:
         """
         for name, items in self.items.items():
-            log.debug(f'{name} ({len(items)})')
+            print(f'{name} ({len(items)})')
+
+    def sortItems(self) -> None:
+        """
+        Sorts all items by price
+        :return:
+        """
+        for name in self.items:
+            self.items[name] = sorted(self.items[name], key=itemgetter(0))
 
     @staticmethod
     def cleanInt(q: int) -> str:
@@ -278,24 +284,7 @@ class HereWeGoAgain:
 
 
 if __name__ == '__main__':
-    log.getLogger('urllib3').setLevel(log.WARNING)
-    log.getLogger('discord_webhook').setLevel(log.WARNING)
-    log.basicConfig(
-        level=log.DEBUG,
-        handlers=[
-            log.FileHandler('logs/latest.log', mode='w', encoding='utf-8'),
-            log.FileHandler(datetime.now().strftime('logs/%H-%M-%d-%m-%Y.log'), mode='w', encoding='utf-8'),
-            log.StreamHandler(sys.stdout)
-        ]
-    )
-    # File logging settings
-    log.getLogger().handlers[0].setFormatter(log.Formatter('[%(name)s]-%(asctime)s-%(levelname)s-%(message)s'))
-    log.getLogger().handlers[1].setFormatter(log.Formatter('[%(name)s]-%(asctime)s-%(levelname)s-%(message)s'))
-    # Console printing settings
-    log.getLogger().handlers[2].setLevel(log.INFO)
-    log.getLogger().handlers[2].setFormatter(log.Formatter('%(message)s'))
-
     try:
         app = HereWeGoAgain()
     except KeyboardInterrupt:
-        log.critical('User interrupted execution')
+        print('User interrupted execution')
